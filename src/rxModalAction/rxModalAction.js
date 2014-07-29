@@ -102,4 +102,138 @@ angular.module('encore.ui.rxModalAction', ['ui.bootstrap'])
             };
         }
     };
+})
+
+/**
+
+Attempt to keep a Modal's controller down to just a few functions:
+
+var modal = rxModalUtil.createInstance($scope, defaultStackName, MESSAGES.downgrade, SupportResponseError);
+        
+var downgradeAccount = function () {
+    $scope.downgradeResult = SupportAccount.downgradeService($routeParams.accountNumber,
+                                                             $scope.fields.ticketNumber);
+    $scope.downgradeResult.$promise.then(modal.successClose('page'), modal.fail());
+
+    modal.processing($scope.downgradeResult.$promise);
+};
+
+modal.clear();
+$scope.submit = downgradeAccount;
+$scope.cancel = $scope.$dismiss;
+
+*/
+.factory('rxModalUtil', function (rxNotify) {
+    var stacks = ['page'];
+    var util = {};
+    
+    // Register stacks to be used when clearing them
+    util.registerStacks = function () {
+        stacks = stacks.concat(_.toArray(arguments));
+        return stacks;
+    };
+
+    util.clearAllStacks = function () {
+        _.each(stacks, rxNotify.clear, rxNotify);
+        return stacks;
+    };
+
+    util.success = function (message, stack) {
+        return function () {
+            return rxNotify.add(message, {
+                stack: stack,
+                type: 'success'
+            });
+        };
+    };
+
+    util.successClose = function (scope, message, stack) {
+        var success = util.success(message, stack);
+        return function (data) {
+            scope.$close(data);
+            return success(data);
+        };
+    };
+
+    util.fail = function (errorParser, message, stack) {
+        return function (data) {
+            if (_.isFunction(errorParser)) {
+                var responseMsg = errorParser(data);
+
+                if (!_.isEmpty(responseMsg)) {
+                    message += ': (' + responseMsg + ')';
+                }
+            }
+            
+            return rxNotify.add(message, {
+                stack: stack,
+                type: 'error'
+            });
+        };
+    };
+
+    util.failDismiss = function (scope, errorParser, message, stack) {
+        var fail = util.fail(errorParser, message, stack);
+        return function (data) {
+            scope.$dismiss(data);
+            return fail(data);
+        };
+    };
+
+    util.processing = function (scope, message, defaultStack) {
+        return function (promise, stack) {
+            util.clearAllStacks();
+            
+            // Capture the instance of the loading notification in order to dismiss it once done processing
+            var loading = rxNotify.add(message, {
+                stack: stack || defaultStack,
+                loading: true
+            });
+
+            promise.finally(function () {
+                rxNotify.dismiss(loading);
+            });
+
+            // Call the postHook (if) defined on succesful resolution
+            if (scope.postHook) {
+                promise.then(scope.postHook);
+            }
+
+            return promise;
+        };
+    };
+
+    util.createInstance = function (scope, defaultStack, messages, errorParser) {
+        if (!(this instanceof util.createInstance)) {
+            return new util.createInstance(scope, defaultStack, messages, errorParser);
+        }
+        messages = _.defaults(messages, {
+            success: null,
+            error: null,
+            loading: null
+        });
+        util.registerStacks(defaultStack);
+        this.getStack = function (stack) {
+            return stack || defaultStack;
+        };
+        this.processing = util.processing(scope, messages.loading, defaultStack);
+            
+        this.success = function (stack) {
+            return util.success(messages.success, this.getStack(stack));
+        };
+        this.successClose = function (stack) {
+            return util.successClose(scope, messages.success, this.getStack(stack));
+        };
+        this.fail = function (stack) {
+            return util.fail(errorParser, messages.error, this.getStack(stack));
+        };
+        this.failDismiss = function (stack) {
+            return util.failDismiss(scope, errorParser, messages.error, this.getStack(stack));
+        };
+        this.clear = function () {
+            return util.clearAllStacks();
+        };
+    };
+
+    return util;
 });

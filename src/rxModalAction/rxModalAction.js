@@ -110,7 +110,7 @@ angular.module('encore.ui.rxModalAction', ['ui.bootstrap'])
  * @name encore.ui.rxModalUtil
  * @description
  * Common functionality when defining a controller for a modal
- * var modal = rxModalUtil.createInstance($scope, defaultStackName, MESSAGES.downgrade, SupportResponseError);
+ * var modal = rxModalUtil.getModal($scope, defaultStackName, MESSAGES.downgrade, SupportResponseError);
  * 
  * var downgradeAccount = function () {
  *     $scope.downgradeResult = SupportAccount.downgradeService($routeParams.accountNumber,

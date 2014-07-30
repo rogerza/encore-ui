@@ -105,24 +105,25 @@ angular.module('encore.ui.rxModalAction', ['ui.bootstrap'])
 })
 
 /**
-
-Attempt to keep a Modal's controller down to just a few functions:
-
-var modal = rxModalUtil.createInstance($scope, defaultStackName, MESSAGES.downgrade, SupportResponseError);
-        
-var downgradeAccount = function () {
-    $scope.downgradeResult = SupportAccount.downgradeService($routeParams.accountNumber,
-                                                             $scope.fields.ticketNumber);
-    $scope.downgradeResult.$promise.then(modal.successClose('page'), modal.fail());
-
-    modal.processing($scope.downgradeResult.$promise);
-};
-
-modal.clear();
-$scope.submit = downgradeAccount;
-$scope.cancel = $scope.$dismiss;
-
-*/
+ *
+ * @ngdoc service
+ * @name encore.ui.rxModalUtil
+ * @description
+ * Common functionality when defining a controller for a modal
+ * var modal = rxModalUtil.createInstance($scope, defaultStackName, MESSAGES.downgrade, SupportResponseError);
+ * 
+ * var downgradeAccount = function () {
+ *     $scope.downgradeResult = SupportAccount.downgradeService($routeParams.accountNumber,
+ *                                                              $scope.fields.ticketNumber);
+ *     $scope.downgradeResult.$promise.then(modal.successClose('page'), modal.fail());
+ * 
+ *     modal.processing($scope.downgradeResult.$promise);
+ * };
+ * 
+ * modal.clear();
+ * $scope.submit = downgradeAccount;
+ * $scope.cancel = $scope.$dismiss;
+ */
 .factory('rxModalUtil', function (rxNotify) {
     var stacks = ['page'];
     var util = {};
@@ -133,11 +134,13 @@ $scope.cancel = $scope.$dismiss;
         return stacks;
     };
 
-    util.clearAllStacks = function () {
+    // Clear notifications that have been used by the controller
+    util.clearNotifications = function () {
         _.each(stacks, rxNotify.clear, rxNotify);
         return stacks;
     };
 
+    // Promise resolved callback for adding a notification
     util.success = function (message, stack) {
         return function () {
             return rxNotify.add(message, {
@@ -147,6 +150,7 @@ $scope.cancel = $scope.$dismiss;
         };
     };
 
+    // Promise resolved callback for adding a notification and closing the modal
     util.successClose = function (scope, message, stack) {
         var success = util.success(message, stack);
         return function (data) {
@@ -155,6 +159,7 @@ $scope.cancel = $scope.$dismiss;
         };
     };
 
+    // Promise reject callback for adding a notification
     util.fail = function (errorParser, message, stack) {
         return function (data) {
             if (_.isFunction(errorParser)) {
@@ -172,6 +177,7 @@ $scope.cancel = $scope.$dismiss;
         };
     };
 
+    // Promise reject callback for adding a notification and dismissing the modal
     util.failDismiss = function (scope, errorParser, message, stack) {
         var fail = util.fail(errorParser, message, stack);
         return function (data) {
@@ -180,9 +186,10 @@ $scope.cancel = $scope.$dismiss;
         };
     };
 
+    // Promise loading notification & postHook
     util.processing = function (scope, message, defaultStack) {
         return function (promise, stack) {
-            util.clearAllStacks();
+            util.clearNotifications();
             
             // Capture the instance of the loading notification in order to dismiss it once done processing
             var loading = rxNotify.add(message, {
@@ -203,9 +210,10 @@ $scope.cancel = $scope.$dismiss;
         };
     };
 
-    util.createInstance = function (scope, defaultStack, messages, errorParser) {
-        if (!(this instanceof util.createInstance)) {
-            return new util.createInstance(scope, defaultStack, messages, errorParser);
+    // Create a modal controller instance for behavior of modal within a modal controller
+    util.getModal = function (scope, defaultStack, messages, errorParser) {
+        if (!(this instanceof util.getModal)) {
+            return new util.getModal(scope, defaultStack, messages, errorParser);
         }
         messages = _.defaults(messages, {
             success: null,
@@ -213,11 +221,11 @@ $scope.cancel = $scope.$dismiss;
             loading: null
         });
         util.registerStacks(defaultStack);
+        this.processing = util.processing(scope, messages.loading, defaultStack);
+
         this.getStack = function (stack) {
             return stack || defaultStack;
         };
-        this.processing = util.processing(scope, messages.loading, defaultStack);
-            
         this.success = function (stack) {
             return util.success(messages.success, this.getStack(stack));
         };
@@ -231,7 +239,7 @@ $scope.cancel = $scope.$dismiss;
             return util.failDismiss(scope, errorParser, messages.error, this.getStack(stack));
         };
         this.clear = function () {
-            return util.clearAllStacks();
+            return util.clearNotifications();
         };
     };
 

@@ -14,4 +14,6 @@ angular.module('encore.ui.configs', [])
     { value: '/dev/xvdo', label: '/dev/xvdo' },
     { value: '/dev/xvdp', label: '/dev/xvdp' }
 ])
-.constant('feedbackApi', '/api/feedback');
+.constant('feedbackApi', '/api/feedback')
+.constant('routesCdnPath',
+    'https://d5b31243886503cdda55-92f888f8ef3e8464bcb65f52330fcbfb.ssl.cf1.rackcdn.com/encoreNav.json');

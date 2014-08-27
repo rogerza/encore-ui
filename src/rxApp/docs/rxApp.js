@@ -1,10 +1,15 @@
 /*jshint unused:false*/
-function rxAppCtrl ($scope, $location, $rootScope, $window, rxAppRoutes) {
+function rxAppCtrl ($scope, $location, $rootScope, $window, encoreRoutes) {
     $scope.subtitle = 'With a subtitle';
 
     $scope.changeSubtitle = function () {
         $scope.subtitle = 'With a new subtitle at ' + Date.now();
     };
+
+    // immediately change to validate loadFromCdn doesn't suck
+    encoreRoutes.setRouteByKey('accountLvlTools', {
+        linkText: 'First'
+    });
 
     $scope.changeRoutes = function () {
         var newRoute = {
@@ -17,7 +22,7 @@ function rxAppCtrl ($scope, $location, $rootScope, $window, rxAppRoutes) {
             ]
         };
 
-        rxAppRoutes.setRouteByKey('accountLvlTools', newRoute);
+        encoreRoutes.setRouteByKey('accountLvlTools', newRoute);
     };
 
     // Fake navigation

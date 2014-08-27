@@ -26,6 +26,7 @@ paths:
   rxActiveUrl: "/#/component/rxActiveUrl"
   rxAge: "/#/component/rxAge"
   rxApp: "/#/component/rxApp"
+  rxAppRoutes: "/#/component/rxAppRoutes"
   rxAttributes: "/#/component/rxAttributes"
   rxAuth: "/#/component/rxAuth"
   rxBreadcrumbs: "/#/component/rxBreadcrumbs"

@@ -149,6 +149,14 @@ Any input field can be placed inside an element with a class of 'field-input'.
         box-sizing: border-box;
     }
 
+    textarea {
+        .inputBorderPadding;
+        background-color: transparent;
+        width: 100%;
+        position: relative;
+        z-index: 2;
+    }
+
     input {
         width: @fieldInputWidth;
         .inputBorderPadding;
@@ -318,6 +326,60 @@ Replace default UI of select fields and adds custom border/arrow
         &:hover,
         &:focus {
             color: @subduedTextHover;
+        }
+    }
+}
+
+
+/*
+## Compressed Layout
+
+```
+<div class="rx-form layout-compressed">
+    <label class="field-label">
+        Monthly Cost:
+    </label>
+</div>
+```
+*/
+
+.rx-form.layout-compressed {
+    .rx-form-row {
+        display: flex;
+        flex-wrap: nowrap;
+        flex: 1 auto;
+
+        rx-form-item,
+        .form-item {
+            padding: 0px 3px;
+            flex: 1;
+        }
+    }
+
+    .form-item {
+        display: block;
+
+        .field-input {
+            width: 100%;
+            display: block;
+
+            select,
+            textarea {
+                width: 100%;
+            }
+
+            input {
+                &:not([type="checkbox"]),
+                &:not([type="radio"]) {
+                    width: 100%;
+                }
+            }
+        }
+
+        .field-label,
+        .field-legend, {
+            font-size: 0.8em;
+            display: block;
         }
     }
 }

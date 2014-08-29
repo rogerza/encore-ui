@@ -67,4 +67,6 @@ function rxFormDemoCtrl ($scope) {
     }];
 
     $scope.optionTableEmptyData = [];
+
+    $scope.compressedLayout = { value: false };
 }

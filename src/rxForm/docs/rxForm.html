@@ -1,4 +1,7 @@
-<div class="forms" ng-controller="rxFormDemoCtrl">
+<div class="forms rx-form" ng-controller="rxFormDemoCtrl" ng-class="{'layout-compressed': compressedLayout.value}">
+    <rx-form-item label="Switch to Compressed Layout">
+        <input type="checkbox" ng-model="compressedLayout.value" />
+    </rx-form-item>
     <h3 class="title">Text inputs</h3>
 
     <rx-form-item label="Plain textbox">

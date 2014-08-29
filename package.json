@@ -16,7 +16,8 @@
     "postinstall": "grunt hooks"
   },
   "dependencies": {
-    "normalize.css": "^3.0.1"
+    "normalize.css": "^3.0.1",
+    "grunt-lib-phantomjs": "^0.6.0"
   },
   "devDependencies": {
     "astrolabe": "~0.3.3-alpha",

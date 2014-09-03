@@ -16,7 +16,7 @@
             </div>
         </header>
         <nav class="rx-app-nav">
-            <div ng-repeat="section in appRoutes.getAll()" class="nav-section nav-section-{{ section.type || 'all' }}">
+            <div ng-repeat="section in routes" class="nav-section nav-section-{{ section.type || 'all' }}">
                 <h2 class="nav-section-title">{{ section.title }}</h2>
                 <rx-app-nav items="section.children" level="1"></rx-app-nav>
             </div>

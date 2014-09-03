@@ -55,19 +55,24 @@ angular.module('encore.ui.rxApp', ['encore.ui.rxEnvironment', 'ngSanitize', 'ngR
         link: function (scope) {
             scope.isPreProd = Environment.isPreProd();
 
-            scope.appRoutes = scope.newInstance ? new rxAppRoutes() : encoreRoutes;
-
             // default hideFeedback to false
-            scope.hideFeedback = scope.hideFeedback ? true : false;
+            var appRoutes = scope.newInstance ? new rxAppRoutes() : encoreRoutes;
 
             // we only want to set new menu data if a new instance of rxAppRoutes was created
             // or if scope.menu was defined
             if (scope.newInstance || scope.menu) {
-                scope.appRoutes.setAll(scope.menu);
+                appRoutes.setAll(scope.menu);
             } else {
                 // if the default menu is needed, load it from the CDN
-                scope.appRoutes.fetchRoutes();
+                appRoutes.fetchRoutes();
             }
+
+            appRoutes.getAll().then(function (routes) {
+                scope.routes = routes;
+            });
+
+            // default hideFeedback to false
+            scope.hideFeedback = scope.hideFeedback ? true : false;
 
             if (scope.collapsibleNav) {
                 hotkeys.add({

@@ -119,13 +119,18 @@ angular.module('encore.ui.rxAppRoutes', [])
 * @description
 * Manages page routes, building urls and marking them as active on route change
 */
-.factory('rxAppRoutes', function ($rootScope, $log, urlUtils) {
+.factory('rxAppRoutes', function ($rootScope, $log, urlUtils, $q) {
     var AppRoutes = function (routes) {
         routes = routes || [];
-        var currentPathChunks;
-
         // we need to get the current path on page load
-        currentPathChunks = urlUtils.getCurrentPathChunks();
+        var currentPathChunks = urlUtils.getCurrentPathChunks();
+        var loadingDeferred = $q.defer();
+
+        // if the routes were already passed in, then we can immediately
+        // resolve the promise
+        if (routes.length > 0) {
+            loadingDeferred.resolve(routes);
+        }
 
         var setDynamicProperties = function (routes) {
             _.each(routes, function (route) {
@@ -204,13 +209,20 @@ angular.module('encore.ui.rxAppRoutes', [])
              * @return {array|undefined} array of indexes describing path to route (or undefined if not found)
              */
             getIndexByKey: function (key) {
-                var routeIndex = getRouteIndex(key, routes);
+                var deferred = $q.defer();
 
-                if (_.isUndefined(routeIndex)) {
-                    $log.debug('Could not find route by key: ', key);
-                }
+                loadingDeferred.promise.then(function () {
+                    var routeIndex = getRouteIndex(key, routes);
 
-                return routeIndex;
+                    if (_.isUndefined(routeIndex)) {
+                        $log.debug('Could not find route by key: ', key);
+                        deferred.reject();
+                    }
+
+                    deferred.resolve(routeIndex);
+                });
+
+                return deferred.promise;
             },
             /**
              * functionality to update routes based on their key
@@ -219,25 +231,31 @@ angular.module('encore.ui.rxAppRoutes', [])
              * @return {boolean} true if successfully updated, false if key not found
              */
             setRouteByKey: function (key, routeInfo) {
-                var routeIndex = this.getIndexByKey(key);
+                var deferred = $q.defer();
 
-                // make sure the key was found
-                if (routeIndex) {
+                this.getIndexByKey(key).then(function (routeIndex) {
                     routes = updateRouteByIndex(routeIndex, routeInfo, routes, 0);
 
                     // now that we've updated the route info, we need to reset the dynamic properties
                     routes = setDynamicProperties(routes);
 
-                    return true;
-                } else {
-                    return false;
-                }
+                    deferred.resolve(routeIndex);
+                }, function () {
+                    deferred.reject();
+                });
+
+                return deferred.promise;
             },
             getAll: function () {
-                return routes;
+                var deferred = $q.defer();
+
+                loadingDeferred.promise.then(deferred.resolve);
+
+                return deferred.promise;
             },
             setAll: function (newRoutes) {
                 routes = setDynamicProperties(newRoutes);
+                loadingDeferred.resolve(routes);
             }
         };
     };

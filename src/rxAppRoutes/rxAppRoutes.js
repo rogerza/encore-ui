@@ -1,4 +1,4 @@
-angular.module('encore.ui.rxAppRoutes', [])
+angular.module('encore.ui.rxAppRoutes', ['encore.ui.rxEnvironment'])
 .service('urlUtils', function ($location, rxEnvironmentUrlFilter, $interpolate, $route) {
     var utils = {};
 
@@ -249,13 +249,18 @@ angular.module('encore.ui.rxAppRoutes', [])
             getAll: function () {
                 var deferred = $q.defer();
 
-                loadingDeferred.promise.then(deferred.resolve);
+                loadingDeferred.promise.then(function () {
+                    deferred.resolve(routes);
+                });
 
                 return deferred.promise;
             },
             setAll: function (newRoutes) {
-                routes = setDynamicProperties(newRoutes);
-                loadingDeferred.resolve(routes);
+                // let's not mess with the original object
+                var routesToBe = _.clone(newRoutes, true);
+
+                routes = setDynamicProperties(routesToBe);
+                loadingDeferred.resolve();
             }
         };
     };

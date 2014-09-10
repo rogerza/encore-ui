@@ -1,12 +1,25 @@
 /* jshint node: true */
 describe('rxApp', function () {
     var scope, scopeCustomNav, collapsibleScope, compile, rootScope, el, elCustom, elCollapsible,
-        elCollapsibleVar, defaultNav, appRoutes;
+        elCollapsibleVar, appRoutes, httpMock, cdnPath, cdnGet;
     var standardTemplate = '<rx-app></rx-app>';
     var collapsibleTemplate = '<rx-app collapsible-nav="true"></rx-app>';
     var collapsibleExternalVarTemplate = '<rx-app collapsible-nav="true" collapsed-nav="collapsed"></rx-app>';
     var customTemplate = '<rx-app site-title="My App" menu="customNav" new-instance="true"' +
         'hide-feedback="true"></rx-app>';
+
+    // Fake default nav that gets passed as the mock cdn response
+    var defaultNav = [{
+        title: 'All Tools',
+        children: [
+            {
+               'href': '/support',
+               'linkText': 'Support Service',
+               'key': 'supportService',
+               'directive': 'rx-support-service-search'
+           }
+        ]
+    }];
 
     var customNav = [{
         title: 'Example Menu',
@@ -18,12 +31,15 @@ describe('rxApp', function () {
         ]
     }];
 
+    var mockNotify = {
+        add: sinon.stub()
+    };
+
     beforeEach(function () {
         // load module
         module('encore.ui.rxApp');
-        module('encore.ui.rxAppRoutes');
-        module('encore.ui.rxEnvironment');
-        module('encore.ui.rxAuth');
+        module('encore.ui.configs');
+        module('encore.ui.rxNotify');
 
         // load templates
         module('templates/rxApp.html');
@@ -33,13 +49,21 @@ describe('rxApp', function () {
         module('templates/rxAppSearch.html');
         module('templates/rxAccountSearch.html');
 
+        module(function ($provide) {
+            $provide.value('rxNotify', mockNotify);
+        });
+
         // Inject in angular constructs
-        inject(function ($rootScope, $compile, encoreNav, rxAppRoutes) {
+        inject(function ($rootScope, $compile, encoreRoutes, $httpBackend, routesCdnPath) {
             rootScope = $rootScope;
             compile = $compile;
-            defaultNav = encoreNav;
-            appRoutes = rxAppRoutes;
+            appRoutes = encoreRoutes;
+            httpMock = $httpBackend;
+            cdnPath = routesCdnPath;
         });
+
+        cdnGet = httpMock.whenGET(cdnPath);
+        cdnGet.respond(defaultNav);
 
         scope = rootScope.$new();
 
@@ -61,15 +85,29 @@ describe('rxApp', function () {
             var pageTitle = el[0].querySelector('.site-title');
 
             // validate it matches 'Encore'
-            expect(pageTitle.textContent).to.equal('Encore');
+            expect($(pageTitle).text()).to.equal('Encore');
         });
 
-        it('should have a default nav', function () {
+        it('should load data from the CDN', function () {
+            // get the nav data from the mock CDN
+            httpMock.flush();
+
             // get first nav section
             var navTitle = el[0].querySelector('.nav-section-title');
 
             // validate it matches 'Encore'
-            expect(navTitle.textContent).to.equal(defaultNav[0].title);
+            expect($(navTitle).text()).to.equal(defaultNav[0].title);
+        });
+
+        it('should show error message if CDN failed to load', function () {
+            // make CDN request fail.
+            cdnGet.respond(404);
+
+            // get the nav data from the mock CDN
+            httpMock.flush();
+
+            // expect rxNotify to be called with error
+            expect(mockNotify.add).to.be.calledWith(sinon.match('Error'), sinon.match({ type: 'error' }));
         });
 
         it('should have a feedback link if not disabled', function () {
@@ -146,7 +184,6 @@ describe('rxAppNav', function () {
     beforeEach(function () {
         // load module
         module('encore.ui.rxApp');
-        module('encore.ui.rxEnvironment');
 
         // load templates
         module('templates/rxAppNav.html');

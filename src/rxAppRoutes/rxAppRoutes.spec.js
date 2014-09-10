@@ -34,10 +34,28 @@ describe('rxAppRoutes', function () {
         }
     };
 
-    beforeEach(function () {
+    var duplicateKeyRoutes = [{
+        href: '/r/BrokenGifs',
+        key: 'dupeKey'
+    }, {
+        href: '/r/wheredidthesodago',
+        key: 'nonDupeKey',
+        children: [{
+            href: '/r/funny',
+            key: 'dupeKey'
+        }, {
+            href: '/r/noKey'
+        }]
+    }, {
+        href: '/r/rogecoin',
+        key: 'suchDupes'
+    }];
+
+    beforeEach(function (done) {
         // load module
-        module('encore.ui.rxApp');
+        module('encore.ui.rxAppRoutes');
         module('encore.ui.rxEnvironment');
+        module('encore.ui.rxNotify');
 
         // Provide any mocks needed
         module(function ($provide) {
@@ -46,7 +64,7 @@ describe('rxAppRoutes', function () {
 
         // Inject in angular constructs
         inject(function (rxAppRoutes, Environment, $location, $rootScope, $log) {
-            appRoutes = rxAppRoutes;
+            appRoutes = new rxAppRoutes();
             envSvc = Environment;
             location = $location;
             rootScope = $rootScope;
@@ -60,8 +78,16 @@ describe('rxAppRoutes', function () {
             url: '{{tld}}/{{path}}'
         });
 
+        appRoutes.getAll().then(function (routes) {
+            generatedRoutes = routes;
+
+            done();
+        });
+
         appRoutes.setAll(fakeRoutes);
-        generatedRoutes = appRoutes.getAll();
+
+        // we have to digest to let all the promises resolve
+        rootScope.$digest();
     });
 
     afterEach(function () {
@@ -105,7 +131,7 @@ describe('rxAppRoutes', function () {
             expect(generatedRoutes[0].active, 'route should no longer be active').to.be.false;
         });
 
-        it('should match with a base HTML tag', function () {
+        it('should match with a base HTML tag', function (done) {
             var routeParts = fakeRoutes[1].href.split('/');
             var basePath = routeParts[1];
             var subPath = routeParts[2];
@@ -114,15 +140,22 @@ describe('rxAppRoutes', function () {
             $(document.head).append($('<base href="/' + basePath + '/">'));
 
             // we have to mock out location.path because Angular doesn't pick up on the basePath update
+            location.path(generatedRoutes[1].url);
+
             sinon.stub(location, 'path').returns('/' + subPath);
 
-            location.path(generatedRoutes[1].url);
             rootScope.$apply();
 
-            expect(generatedRoutes[1].active, 'route should be active').to.be.true;
+            appRoutes.getAll().then(function (routes) {
+                expect(routes[1].active, 'route should be active').to.be.true;
 
-            // restore test state
+                done();
+            });
+
+            rootScope.$apply();
+
             location.path.restore();
+            // restore test state
             $('base').remove();
         });
 
@@ -167,104 +200,113 @@ describe('rxAppRoutes', function () {
 
         appRoutes.setAll(newRoutes);
 
-        expect(appRoutes.getAll()[0].url).to.equal(newRoutes[0].href);
+        return appRoutes.getAll().then(function (routes) {
+            expect(routes[0].url).to.equal(newRoutes[0].href);
+        });
     });
 
     it('should allow getting route index by key', function () {
         var rootRouteIndex = appRoutes.getIndexByKey('root');
+        expect(rootRouteIndex, 'root round index').to.eventually.eql([0]);
 
-        expect(rootRouteIndex, 'root round index').to.eql([0]);
-        expect(generatedRoutes[rootRouteIndex[0]].url).to.equal('example/myPath');
-
-        // check recusive functionality
-        var childIndex = appRoutes.getIndexByKey('firstChild');
-        expect(childIndex, 'child route index').to.eql([0, 0]);
-
-        var childChildIndex = appRoutes.getIndexByKey('firstChildChild');
-        expect(childChildIndex, 'child child route index').to.eql([0, 0, 0]);
-
-        var secondChildIndex = appRoutes.getIndexByKey('secondChild');
-        expect(secondChildIndex, 'second child index').to.eql([0, 1]);
+        return rootRouteIndex.then(function (index) {
+            expect(generatedRoutes[index[0]].url).to.equal('example/myPath');
+        });
     });
 
-    it('should warn if duplicate keys found', function () {
-        var duplicateKeyRoutes = [{
-            href: '/r/BrokenGifs',
-            key: 'dupeKey'
-        }, {
-            href: '/r/wheredidthesodago',
-            key: 'nonDupeKey',
-            children: [{
-                href: '/r/funny',
-                key: 'dupeKey'
-            }, {
-                href: '/r/noKey'
-            }]
-        }, {
-            href: '/r/rogecoin',
-            key: 'suchDupes'
-        }];
+    it('should allow getting nested route index by key', function () {
+        var firstChild = appRoutes.getIndexByKey('firstChild');
+        expect(firstChild, 'child route index').to.eventually.eql([0, 0]);
 
+        var firstChildChild = appRoutes.getIndexByKey('firstChildChild');
+        expect(firstChildChild, 'child child route index').to.eventually.eql([0, 0, 0]);
+
+        var secondChild = appRoutes.getIndexByKey('secondChild');
+        expect(secondChild, 'child route index').to.eventually.eql([0, 1]);
+    });
+
+    it('should not warn if no duplicate keys found', function () {
         appRoutes.setAll(duplicateKeyRoutes);
 
         // shouldn't warn when searching non-dupe keys
-        appRoutes.getIndexByKey('nonDupeKey');
-        expect(log.warn.logs.length).to.equal(0);
+        return appRoutes.getIndexByKey('nonDupeKey').then(function () {
+            expect(log.warn.logs.length).to.equal(0);
+        });
+    });
+
+    it('should warn if duplicate keys found', function () {
+        appRoutes.setAll(duplicateKeyRoutes);
 
         // find index w/duplicate key
         var index = appRoutes.getIndexByKey('dupeKey');
 
         // should return last match
-        expect(index).to.eql([1, 0]);
+        expect(index).to.eventually.eql([1, 0]);
 
         // should log a message about duplicate keys
-        expect(log.warn.logs.length).to.equal(1);
+        return index.then(function () {
+            expect(log.warn.logs.length).to.equal(1);
+        });
     });
 
     describe('setRouteByKey', function () {
-        it('should allow updating a nav item by key', function () {
+        it('should allow updating a nav item by key', function (done) {
             var newRouteData = {
                 href: { tld: 'example', path: 'myOtherPath' }
             };
 
             // try updating the root element
-            appRoutes.setRouteByKey('root', newRouteData);
+            appRoutes.setRouteByKey('root', newRouteData).then(function () {
+                appRoutes.getAll().then(function (routes) {
+                    // get the root route
+                    var root = routes[0];
 
-            var root = appRoutes.getAll()[0];
+                    // check that it was updated
+                    expect(root.href).to.equal(newRouteData.href);
+                    expect(root.url).to.equal('example/myOtherPath');
 
-            // check that it was updated
-            expect(root.href).to.equal(newRouteData.href);
-            expect(root.url).to.equal('example/myOtherPath');
+                    // check the first child wasn't modified
+                    expect(root.children[0].href).to.equal('/{{user}}/1-1');
+                    expect(root.children[0].url).to.equal('/me/1-1');
 
-            // check the first child wasn't modified
-            expect(root.children[0].href).to.equal('/{{user}}/1-1');
-            expect(root.children[0].url).to.equal('/me/1-1');
+                    done();
+                });
+            });
+
+            rootScope.$digest();
         });
 
-        it('should allow updating a child item by key', function () {
+        it('should allow updating a child item by key', function (done) {
             // try updating a child item
             var updatedFirstChild = {
                 href: 'anotherRoute'
             };
-            appRoutes.setRouteByKey('firstChild', updatedFirstChild);
 
-            var root = appRoutes.getAll()[0];
+            appRoutes.setRouteByKey('firstChild', updatedFirstChild).then(function () {
+                appRoutes.getAll().then(function (routes) {
+                    var root = routes[0];
 
-            // check that parent wasn't modified
-            expect(root.href).to.equal(fakeRoutes[0].href);
-            expect(root.url).to.equal('example/myOtherPath');
+                    // check that parent wasn't modified
+                    expect(root.href).to.eql(fakeRoutes[0].href);
+                    expect(root.url).to.equal('example/myPath');
 
-            var firstChild = root.children[0];
-            // check that the first child was updated
-            expect(firstChild.href).to.equal(updatedFirstChild.href);
-            expect(firstChild.url).to.equal(updatedFirstChild.href);
+                    var firstChild = root.children[0];
+                    // check that the first child was updated
+                    expect(firstChild.href).to.eql(updatedFirstChild.href);
+                    expect(firstChild.url).to.equal(updatedFirstChild.href);
 
-            // check that the first child's children are still around
-            var originalNestedChild = fakeRoutes[0].children[0].children[0];
-            expect(firstChild.children[0].linkText).to.equal(originalNestedChild.linkText);
+                    // check that the first child's children are still around
+                    var originalNestedChild = fakeRoutes[0].children[0].children[0];
+                    expect(firstChild.children[0].linkText).to.equal(originalNestedChild.linkText);
+
+                    done();
+                });
+            });
+
+            rootScope.$digest();
         });
 
-        it('should allow updating the children property', function () {
+        it('should allow updating the children property', function (done) {
             // try adding children to an item
             var updatedSecondChild = {
                 href: 'someOtherRoute',
@@ -272,15 +314,21 @@ describe('rxAppRoutes', function () {
                     href: 'yetAnotherRoute'
                 }]
             };
-            appRoutes.setRouteByKey('secondChild', updatedSecondChild);
+            appRoutes.setRouteByKey('secondChild', updatedSecondChild).then(function () {
+                appRoutes.getAll().then(function (routes) {
+                    // check that the second child was updated
+                    expect(routes[0].children[1].href).to.equal(updatedSecondChild.href);
 
-            // check that the second child was updated
-            expect(appRoutes.getAll()[0].children[1].href).to.equal(updatedSecondChild.href);
+                    // check that the second child now has children
+                    var newChild = routes[0].children[1].children[0];
+                    expect(newChild.href).to.equal(updatedSecondChild.children[0].href);
+                    expect(newChild.url).to.equal(updatedSecondChild.children[0].href);
 
-            // check that the second child now has children
-            var newChild = appRoutes.getAll()[0].children[1].children[0];
-            expect(newChild.href).to.equal(updatedSecondChild.children[0].href);
-            expect(newChild.url).to.equal(updatedSecondChild.children[0].href);
+                    done();
+                });
+            });
+
+            rootScope.$digest();
         });
     });
 });

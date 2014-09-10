@@ -4,7 +4,7 @@ var path = require('path');
 module.exports = function (config) {
     config.set({
         // frameworks to use
-        frameworks: ['mocha', 'chai', 'sinon-chai'],
+        frameworks: ['mocha', 'chai', 'sinon-chai', 'chai-as-promised'],
 
         // list of files to exclude
         exclude: [

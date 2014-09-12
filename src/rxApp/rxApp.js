@@ -9,7 +9,13 @@ angular.module('encore.ui.rxApp', ['encore.ui.rxAppRoutes', 'encore.ui.rxEnviron
 *
 * @returns {object} Instance of rxAppRoutes with `fetchRoutes` method added
 */
-.factory('encoreRoutes', function (rxAppRoutes, routesCdnPath, rxNotify, $q, $http) {
+.factory('encoreRoutes', function (rxAppRoutes, routesCdnPath, rxNotify, $q, $http,
+                                     rxVisibilityPathParams, rxVisibility, Environment) {
+
+    // We use rxVisibility in the nav menu at routesCdnPath, so ensure it's ready
+    // before loading from the CDN
+    rxVisibility.addVisibilityObj(rxVisibilityPathParams);
+
     var encoreRoutes = new rxAppRoutes();
 
     var setFailureMessage = function () {
@@ -18,8 +24,14 @@ angular.module('encore.ui.rxApp', ['encore.ui.rxAppRoutes', 'encore.ui.rxEnviron
         });
     };
 
+    var env = Environment.get();
+    var url = routesCdnPath.production;
+    if (env !== 'unified-prod') {
+        url = routesCdnPath.staging;
+    }
+
     encoreRoutes.fetchRoutes = function () {
-        return $http.get(routesCdnPath)
+        return $http.get(url)
             .success(encoreRoutes.setAll)
             .error(setFailureMessage);
     };
@@ -216,19 +228,35 @@ angular.module('encore.ui.rxApp', ['encore.ui.rxAppRoutes', 'encore.ui.rxEnviron
         scope: {
             item: '='
         },
-        controller: function ($scope, $location) {
+        controller: function ($scope, $location, rxVisibility) {
             // provide `route` as a scope property so that links can tie into them
             $scope.route = $route;
 
             $scope.isVisible = function (visibility) {
+                var locals = {
+                    location: $location
+                };
                 if (_.isUndefined(visibility)) {
                     // if undefined, default to true
                     return true;
                 }
 
-                return $scope.$eval(visibility, {
-                    location: $location
-                });
+                if (_.isArray(visibility)) {
+                    // Expected format is
+                    // ["someMethodName", { param1: "abc", param2: "def" }]
+                    // The second element of the array is optional, used to pass extra
+                    // info to "someMethodName"
+                    var methodName = visibility[0];
+                    var configObj = visibility[1]; //optional
+
+                    _.merge(locals, configObj);
+
+                    // The string 'false' will evaluate to the "real" false
+                    // in $scope.$eval
+                    visibility = rxVisibility.getMethod(methodName) || 'false';
+                }
+
+                return $scope.$eval(visibility, locals);
             };
 
             $scope.toggleNav = function (ev, href) {
@@ -334,4 +362,70 @@ angular.module('encore.ui.rxApp', ['encore.ui.rxAppRoutes', 'encore.ui.rxEnviron
             };
         }
     };
+})
+
+/*
+ * @ngdoc service
+ * @name encore.ui.rxApp:rxVisibility
+ * @description
+ * Provides an interface for adding new `visibility` methods for nav menus.
+ * Methods added via `addMethod` should have a `function (scope, args)` interface
+ * When you do `visibility: [ "someMethodName", { foo: 1, bar: 2} ]` in
+ * a nav menu definition, the (optional) object will be passed to your method as the
+ * second argument `args`, i.e. function (scope, args) {}
+ */
+.factory('rxVisibility', function () {
+
+    var methods = {};
+
+    var addMethod = function (methodName, method) {
+        methods[methodName] = method;
+    };
+
+    var getMethod = function (methodName) {
+        return methods[methodName];
+    };
+
+    var hasMethod = function (methodName) {
+        return _.has(methods, methodName);
+    };
+
+    /* This is a convenience wrapper around `addMethod`, for
+     * objects that define both `name` and `method` properties
+     */
+    var addVisibilityObj = function (obj) {
+        addMethod(obj.name, obj.method);
+    };
+
+    return {
+        addMethod: addMethod,
+        getMethod: getMethod,
+        hasMethod: hasMethod,
+        addVisibilityObj: addVisibilityObj
+
+    };
+    
+})
+
+/*
+ * @ngdoc object
+ * name encore.ui.rxApp:rxVisibilityPathParams
+ * @description
+ * Returns an object with `name` and `method` params that can
+ * be passed to `rxVisibility.addMethod()`. We use register this by 
+ * default, as it's used by the nav menu we keep in routesCdnPath.
+ * The method is used to check if {param: 'someParamName'} is present
+ * in the current route
+ * Use it as `visibility: [ 'rxPathParams', { param: 'userName' } ]`
+ */
+.factory('rxVisibilityPathParams', function ($routeParams) {
+
+    var pathParams = {
+        name:'rxPathParams',
+        method: function (scope, args) {
+            return !_.isUndefined($routeParams[args.param]);
+        }
+    };
+
+    return pathParams;
 });

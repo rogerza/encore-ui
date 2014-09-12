@@ -1,5 +1,5 @@
 /*jshint unused:false*/
-function rxAppCtrl ($scope, $location, $rootScope, $window, encoreRoutes) {
+function rxAppCtrl ($scope, $location, $rootScope, $window, encoreRoutes, rxVisibility) {
     $scope.subtitle = 'With a subtitle';
 
     $scope.changeSubtitle = function () {
@@ -10,6 +10,13 @@ function rxAppCtrl ($scope, $location, $rootScope, $window, encoreRoutes) {
     encoreRoutes.setRouteByKey('accountLvlTools', {
         linkText: 'First'
     });
+
+    rxVisibility.addMethod(
+        'isUserDefined',
+        function (scope, locals) {
+            return !_.isEmpty($rootScope.user);
+        }
+    );
 
     $scope.changeRoutes = function () {
         var newRoute = {
@@ -63,9 +70,7 @@ function rxAppCtrl ($scope, $location, $rootScope, $window, encoreRoutes) {
             },
             {
                 linkText: '1st Order Item (w/o href) w/ Children',
-                childVisibility: function isUserDefined () {
-                    return !_.isEmpty($rootScope.user);
-                },
+                childVisibility: [ 'isUserDefined' ],
                 childHeader: '<strong class="current-search">Current User:</strong>' +
                              '<span class="current-result">{{$root.user}}</span>',
                 directive: searchDirective,

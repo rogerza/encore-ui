@@ -59,7 +59,7 @@ describe('rxApp', function () {
             compile = $compile;
             appRoutes = encoreRoutes;
             httpMock = $httpBackend;
-            cdnPath = routesCdnPath;
+            cdnPath = routesCdnPath.staging;
         });
 
         cdnGet = httpMock.whenGET(cdnPath);
@@ -214,7 +214,7 @@ describe('rxAppNav', function () {
 });
 
 describe('rxAppNavItem', function () {
-    var scope, compile, rootScope, el, location, someProp;
+    var scope, compile, rootScope, el, location, someProp, rxvisibility;
     var template = '<rx-app-nav-item item="item"></rx-app-nav-item>';
 
     var menuItem = {
@@ -229,9 +229,7 @@ describe('rxAppNavItem', function () {
             {
                 href: '/1-1',
                 linkText: '1st-1st',
-                childVisibility: function () {
-                    return false;
-                },
+                childVisibility: [ 'falseChildVisibilty' ],
                 children: [
                     {
                         href: '/1-1-1',
@@ -253,6 +251,15 @@ describe('rxAppNavItem', function () {
                         linkText: '1st-3rd-1st'
                     }
                 ]
+            }, {
+                linkText: '1st-4th',
+                visibility: [ 'somePropMethod', { arg1: 'arg1', arg2: 'arg2' } ],
+                children: [
+                    {
+                        href: '/1-4-1',
+                        linkText: '1st-4th-1st'
+                    }
+                ]
             }
         ]
     };
@@ -267,12 +274,26 @@ describe('rxAppNavItem', function () {
         module('templates/rxAppNavItem.html');
 
         // Inject in angular constructs
-        inject(function ($rootScope, $compile, $location) {
+        inject(function ($rootScope, $compile, $location, rxVisibility) {
             rootScope = $rootScope;
             scope = $rootScope.$new();
             compile = $compile;
             location = $location;
+            rxvisibility = rxVisibility;
         });
+
+        rxvisibility.addMethod(
+            'somePropMethod',
+            function (scope, locals) {
+                /* should return false */
+                return locals.arg1 === locals.arg2;
+            }
+        );
+
+        rxvisibility.addMethod(
+            'falseChildVisibilty',
+            function () { return false; }
+        );
 
         scope.item = _.clone(menuItem, true);
 
@@ -304,7 +325,10 @@ describe('rxAppNavItem', function () {
         expect(children[2].className, 'middle child, expression').to.not.contain('ng-hide');
 
         // check that third level 2 item is not visible (since 'visibility' function currently returns false)
-        expect(children[3].className, 'last child').to.contain('ng-hide');
+        expect(children[3].className, 'third child').to.contain('ng-hide');
+
+        // check that third level 2 item is not visible (since 'somePropMethod' function currently returns false)
+        expect(children[5].className, 'fourth child, linkText: 1st-4th').to.contain('ng-hide');
 
         // we need to set the property that the visibility function is checking to true
         someProp = true;
@@ -389,5 +413,75 @@ describe('rxPage', function () {
         scope.myCustomTitle = 'abc';
         scope.$digest();
         expect(pageTitle.getTitle()).to.equal('abc');
+    });
+});
+
+describe('rxVisibility', function () {
+    var rxvisibility;
+
+    beforeEach(function () {
+        module('encore.ui.rxApp');
+
+        inject(function (rxVisibility) {
+            rxvisibility = rxVisibility;
+        });
+    });
+
+    it('should have an added method', function () {
+        var method = function () {};
+
+        rxvisibility.addMethod('foo', method);
+        expect(rxvisibility.hasMethod('foo'), 'hasMethod').to.be.true;
+    });
+
+    it('should have added a visibility object', function () {
+        var obj = {
+            name: 'someName',
+            method: function () { return true; }
+        };
+
+        rxvisibility.addVisibilityObj(obj);
+        expect(rxvisibility.hasMethod('someName'), 'hasMethod').to.be.true;
+        expect(rxvisibility.getMethod('someName'), 'getMethod').to.equal(obj.method);
+    });
+
+    it('should return an added method', function () {
+        var method = function () {};
+
+        rxvisibility.addMethod('foo', method);
+        expect(rxvisibility.getMethod('foo'), 'getMethod').to.equal(method);
+        
+    });
+
+    it('should return undefined for an unknown method', function () {
+        expect(rxvisibility.getMethod('foo'), 'getMethod').to.be.undefined;
+    });
+});
+
+describe('rxVisibilityPathParams', function () {
+
+    beforeEach(function () {
+        // Necessary so `$routeProvider` is available
+        module('ngRoute');
+
+        module('encore.ui.rxApp');
+
+    });
+
+    it('should let me set location', function () {
+        module(function ($routeProvider) {
+            $routeProvider.when('/foo/:barId', {});
+        });
+        
+        inject(function ($location, $route, $rootScope, $routeParams, rxVisibilityPathParams) {
+            $location.path('/foo/someIdForBar');
+            $rootScope.$digest();
+            expect($routeParams).to.deep.equal({ barId: 'someIdForBar' });
+            var scope = $rootScope.$new();
+            var method = rxVisibilityPathParams.method;
+            expect(method(scope, { param: 'barId' }), ':barId should be present').to.be.true;
+            expect(method(scope, { param: 'abc' }), ':abc is not defined, should not be present').to.be.false;
+        });
+
     });
 });

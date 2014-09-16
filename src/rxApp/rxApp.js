@@ -1,7 +1,7 @@
 angular.module('encore.ui.rxApp', ['encore.ui.rxAppRoutes', 'encore.ui.rxEnvironment', 'ngSanitize',
     'ngRoute', 'cfp.hotkeys'])
 // This service creates an instance of AppRoutes that is used for the Encore App nav
-.service('encoreRoutes', function (rxAppRoutes, routesCdnPath, rxNotify, $q, $http) {
+.factory('encoreRoutes', function (rxAppRoutes, routesCdnPath, rxNotify, $q, $http) {
     var encoreRoutes = new rxAppRoutes();
 
     var setFailureMessage = function () {

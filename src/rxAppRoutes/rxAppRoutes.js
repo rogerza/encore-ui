@@ -76,7 +76,7 @@ angular.module('encore.ui.rxAppRoutes', ['encore.ui.rxEnvironment'])
         // (in case the difference is the 'hash' like on the encore-ui demo page)
         var pathMatches = utils.matchesSubChunks(currentPathChunks, itemUrlChunks, numChunks);
         if (!pathMatches) {
-            utils.matchesSubChunks(utils.getChunks($location.hash()), itemUrlChunks, numChunks);
+            pathMatches = utils.matchesSubChunks(utils.getChunks($location.hash()), itemUrlChunks, numChunks);
         }
 
         // if current item not active, check if any children are active

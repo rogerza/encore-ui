@@ -1,6 +1,14 @@
 angular.module('encore.ui.rxApp', ['encore.ui.rxAppRoutes', 'encore.ui.rxEnvironment', 'ngSanitize',
     'ngRoute', 'cfp.hotkeys'])
-// This service creates an instance of AppRoutes that is used for the Encore App nav
+/**
+* @ngdoc service
+* @name encore.ui.rxApp:encoreRoutes
+* @description
+* Creates a shared instance of AppRoutes that is used for the Encore App nav.
+* This allows apps to make updates to the nav via `encoreRoutes`.
+*
+* @returns {object} Instance of rxAppRoutes with `fetchRoutes` method added
+*/
 .factory('encoreRoutes', function (rxAppRoutes, routesCdnPath, rxNotify, $q, $http) {
     var encoreRoutes = new rxAppRoutes();
 

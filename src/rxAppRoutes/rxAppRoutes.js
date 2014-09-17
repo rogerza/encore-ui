@@ -1,9 +1,13 @@
 angular.module('encore.ui.rxAppRoutes', ['encore.ui.rxEnvironment'])
+/**
+* @ngdoc service
+* @name encore.ui.rxAppRoutes:urlUtils
+* @description
+* Set of utility functions used by rxAppRoutes to break apart/compare URLs
+*/
 .service('urlUtils', function ($location, rxEnvironmentUrlFilter, $interpolate, $route) {
-    var utils = {};
-
     // remove any preceding # and / from the URL for cleaner comparison
-    utils.stripLeadingChars = function (url) {
+    this.stripLeadingChars = function (url) {
         // http://regexr.com/39coc
         var leadingChars = /^((?:\/|#)+)/;
 
@@ -11,7 +15,7 @@ angular.module('encore.ui.rxAppRoutes', ['encore.ui.rxEnvironment'])
     };
 
     // remove any trailing /'s from the URL
-    utils.stripTrailingSlash = function (url) {
+    this.stripTrailingSlash = function (url) {
         // Match a forward slash / at the end of the string ($)
         var trailingSlash = /\/$/;
 
@@ -19,7 +23,7 @@ angular.module('encore.ui.rxAppRoutes', ['encore.ui.rxEnvironment'])
     };
 
     // Given a URL, split it on '/' and return all the non-empty components
-    utils.getChunks = function (url) {
+    this.getChunks = function (url) {
         if (!_.isString(url)) {
             return [''];
         }
@@ -34,7 +38,7 @@ angular.module('encore.ui.rxAppRoutes', ['encore.ui.rxEnvironment'])
     // if the current page url is 'http://localhost:9000/encore-ui/#/overviewPage#bookmark?book=harry%20potter'
     // and the page contains a <base href="encore-ui"> tag
     // getCurrentPath() would return '/encore-ui/overviewPage'
-    utils.getCurrentPathChunks = function () {
+    this.getCurrentPathChunks = function () {
         var fullPath;
         var base = document.getElementsByTagName('base');
         var basePath = '';
@@ -43,40 +47,40 @@ angular.module('encore.ui.rxAppRoutes', ['encore.ui.rxEnvironment'])
             basePath = base[0].getAttribute('href');
 
             // remove trailing '/' if present
-            basePath = utils.stripTrailingSlash(basePath);
+            basePath = this.stripTrailingSlash(basePath);
         }
 
         fullPath = basePath + $location.path();
-        fullPath = utils.stripLeadingChars(fullPath);
+        fullPath = this.stripLeadingChars(fullPath);
 
-        return utils.getChunks(fullPath);
+        return this.getChunks(fullPath);
     };
 
     // get the url defined in the route by removing the hash tag, leading slashes and query string
     // e.g. '/#/my/url?param=1' -> 'my/url'
-    utils.getItemUrl = function (item) {
+    this.getItemUrl = function (item) {
         if (!_.isString(item.url)) {
             return undefined;
         }
 
         // remove query string
         var itemUrl = item.url.split('?')[0];
-        itemUrl = utils.stripLeadingChars(itemUrl);
+        itemUrl = this.stripLeadingChars(itemUrl);
 
         return itemUrl;
     };
 
     // For a given route item, grab its defined URL, and see
     // if it matches the currentPathChunks
-    utils.isActive = function (item, currentPathChunks) {
-        var itemUrlChunks = utils.getChunks(utils.getItemUrl(item));
+    this.isActive = function (item, currentPathChunks) {
+        var itemUrlChunks = this.getChunks(this.getItemUrl(item));
         var numChunks = itemUrlChunks.length;
 
         // check against the path and the hash
         // (in case the difference is the 'hash' like on the encore-ui demo page)
-        var pathMatches = utils.matchesSubChunks(currentPathChunks, itemUrlChunks, numChunks);
+        var pathMatches = this.matchesSubChunks(currentPathChunks, itemUrlChunks, numChunks);
         if (!pathMatches) {
-            pathMatches = utils.matchesSubChunks(utils.getChunks($location.hash()), itemUrlChunks, numChunks);
+            pathMatches = this.matchesSubChunks(this.getChunks($location.hash()), itemUrlChunks, numChunks);
         }
 
         // if current item not active, check if any children are active
@@ -88,7 +92,7 @@ angular.module('encore.ui.rxAppRoutes', ['encore.ui.rxEnvironment'])
         return pathMatches;
     };
 
-    utils.buildUrl = function (url) {
+    this.buildUrl = function (url) {
         // sometimes links don't have URLs defined, so we need to exit before $interpolate throws an error
         if (_.isUndefined(url)) {
             return url;
@@ -107,11 +111,9 @@ angular.module('encore.ui.rxAppRoutes', ['encore.ui.rxEnvironment'])
 
     // Given two sets of chunks, check if the first `numChunks` of `firstChunks`
     // matches `subChunks`
-    utils.matchesSubChunks = function (firstChunks, subChunks, numChunks) {
+    this.matchesSubChunks = function (firstChunks, subChunks, numChunks) {
         return _.isEqual(firstChunks.slice(0, numChunks), subChunks);
     };
-
-    return utils;
 })
 /**
 * @ngdoc interface

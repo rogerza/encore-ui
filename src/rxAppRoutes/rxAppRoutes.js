@@ -211,20 +211,16 @@ angular.module('encore.ui.rxAppRoutes', ['encore.ui.rxEnvironment'])
              * @return {array|undefined} array of indexes describing path to route (or undefined if not found)
              */
             getIndexByKey: function (key) {
-                var deferred = $q.defer();
-
-                loadingDeferred.promise.then(function () {
+                return loadingDeferred.promise.then(function () {
                     var routeIndex = getRouteIndex(key, routes);
 
                     if (_.isUndefined(routeIndex)) {
                         $log.debug('Could not find route by key: ', key);
-                        deferred.reject();
+                        return $q.reject();
                     }
 
-                    deferred.resolve(routeIndex);
+                    return routeIndex;
                 });
-
-                return deferred.promise;
             },
             /**
              * functionality to update routes based on their key
@@ -233,29 +229,21 @@ angular.module('encore.ui.rxAppRoutes', ['encore.ui.rxEnvironment'])
              * @return {boolean} true if successfully updated, false if key not found
              */
             setRouteByKey: function (key, routeInfo) {
-                var deferred = $q.defer();
-
-                this.getIndexByKey(key).then(function (routeIndex) {
+                return this.getIndexByKey(key).then(function (routeIndex) {
                     routes = updateRouteByIndex(routeIndex, routeInfo, routes, 0);
 
                     // now that we've updated the route info, we need to reset the dynamic properties
                     routes = setDynamicProperties(routes);
 
-                    deferred.resolve(routeIndex);
+                    return routeIndex;
                 }, function () {
-                    deferred.reject();
+                    return $q.reject();
                 });
-
-                return deferred.promise;
             },
             getAll: function () {
-                var deferred = $q.defer();
-
-                loadingDeferred.promise.then(function () {
-                    deferred.resolve(routes);
+                return loadingDeferred.promise.then(function () {
+                    return routes;
                 });
-
-                return deferred.promise;
             },
             setAll: function (newRoutes) {
                 // let's not mess with the original object

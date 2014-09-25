@@ -6,11 +6,6 @@ function rxAppCtrl ($scope, $location, $rootScope, $window, encoreRoutes, rxVisi
         $scope.subtitle = 'With a new subtitle at ' + Date.now();
     };
 
-    // immediately change to validate loadFromCdn doesn't suck
-    encoreRoutes.setRouteByKey('accountLvlTools', {
-        linkText: 'First'
-    });
-
     rxVisibility.addMethod(
         'isUserDefined',
         function (scope, locals) {

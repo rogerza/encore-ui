@@ -24,10 +24,11 @@ angular.module('encore.ui.rxApp', ['encore.ui.rxAppRoutes', 'encore.ui.rxEnviron
         });
     };
 
-    var env = Environment.get();
-    var url = routesCdnPath.production;
-    if (env !== 'unified-prod') {
-        url = routesCdnPath.staging;
+    var url = routesCdnPath.staging;
+    if (Environment.isPreProd()) {
+        url = routesCdnPath.preprod;
+    } else if (Environment.isUnifiedProd()) {
+        url = routesCdnPath.production;
     }
 
     encoreRoutes.fetchRoutes = function () {

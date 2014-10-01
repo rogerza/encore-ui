@@ -332,3 +332,164 @@ describe('rxAppRoutes', function () {
         });
     });
 });
+
+describe('urlUtils', function () {
+    var urlutils;
+    var route = {
+        current: {
+            pathParams: {
+                user: 'me'
+            }
+        }
+    };
+
+    beforeEach(function () {
+        module('encore.ui.rxAppRoutes');
+        module('encore.ui.rxEnvironment');
+        // Provide any mocks needed
+        module(function ($provide) {
+            $provide.value('$route', route);
+        });
+
+        inject(function (urlUtils) {
+            urlutils = urlUtils;
+        });
+    });
+
+    describe('stripLeadingChars', function () {
+        it('should strip leading # and /', function () {
+            expect(urlutils.stripLeadingChars('##foo'), '##foo').to.equal('foo');
+            expect(urlutils.stripLeadingChars('//##bar'), '//##bar').to.equal('bar');
+            expect(urlutils.stripLeadingChars('//bar'), '//bar').to.equal('bar');
+            expect(urlutils.stripLeadingChars('//##bar'), '//##bar').to.equal('bar');
+            expect(urlutils.stripLeadingChars('##//bar'), '##//bar').to.equal('bar');
+        });
+
+        it('should not strip inside # or /', function () {
+            expect(urlutils.stripLeadingChars('foo#bar')).to.equal('foo#bar');
+            expect(urlutils.stripLeadingChars('foo/bar')).to.equal('foo/bar');
+        });
+
+    });
+
+    describe('stripTrailingSlash', function () {
+        it('should remove trailing slash',  function () {
+            expect(urlutils.stripTrailingSlash('foo/')).to.equal('foo');
+        });
+
+        it('should not remove inside /', function () {
+            expect(urlutils.stripTrailingSlash('foo/bar')).to.equal('foo/bar');
+        });
+    });
+
+    describe('getChunks', function () {
+        it('should return non-empty chunks', function () {
+            var url = '//abc/def//ghi';
+            expect(urlutils.getChunks(url)).to.deep.equal([ 'abc', 'def', 'ghi' ]);
+        });
+
+        it('should return an empty string in an array on non-string entry', function () {
+            expect(urlutils.getChunks(undefined)).to.deep.equal(['']);
+        });
+    });
+
+    describe('getFullPath', function () {
+        // Provide any mocks needed
+        var route;
+        module(function ($provide) {
+            $provide.value('$document', route);
+        });
+        
+    });
+
+    describe('getCurrentPathChunks', function () {
+        var originalGetFullPath;
+        before(function () {
+            originalGetFullPath = urlutils.getFullPath;
+        });
+
+        after(function () {
+            urlutils.getFullPath = originalGetFullPath;
+        });
+
+        it('should have correct chunks with no base', function () {
+            var url = '/encore-ui/#/overviewPage';
+            urlutils.getFullPath = function () { return url; };
+
+            expect(urlutils.getCurrentPathChunks()).to.deep.equal(['encore-ui', '#', 'overviewPage']);
+                
+        });
+
+    });
+
+    describe('getItemUrl', function () {
+        it('should remove leading slashes, hash tags and query string', function () {
+            var item = { url: '/#/my/url?param=1' };
+            expect(urlutils.getItemUrl(item)).to.equal('my/url');
+        });
+
+        it('should return undefined if `url` is not present on item', function () {
+            expect(urlutils.getItemUrl({})).to.equal(undefined);
+        });
+        
+    });
+
+    describe('isActive', function () {
+        it('should be active on an exact match', function () {
+            var item = { url: '/foo/bar' };
+            var currentPathChunks = [ 'foo', 'bar' ];
+            expect(urlutils.isActive(item, currentPathChunks), 'item: /foo/bar').to.be.true;
+        });
+
+        it('should not be active if the item url is longer than the current url', function () {
+            var item = { url: '/foo/bar/blah' };
+            var currentPathChunks = [ 'foo', 'bar' ];
+            expect(urlutils.isActive(item, currentPathChunks), 'item: /foo/bar/blah').to.be.false;
+        });
+        
+        it('should not be active if the item has no url', function () {
+            var item = {};
+            var currentPathChunks = [ 'foo', 'bar' ];
+            expect(urlutils.isActive(item, currentPathChunks), 'item: /foo').to.be.false;
+        });
+
+        it('should be active if the item has no url but a child item is active', function () {
+            var item = {
+                children: [
+                    { url: '/foo/bar/blah' }
+                ]
+            };
+            var currentPathChunks = [ 'foo', 'bar', 'blah' ];
+            expect(urlutils.isActive(item, currentPathChunks), 'false before checking children').to.be.false;
+            expect(urlutils.isActive(item.children[0], currentPathChunks), 'child is active').to.be.true;
+            item.children[0].active = true;
+            expect(urlutils.isActive(item, currentPathChunks), 'active now that child is active').to.be.true;
+        });
+
+    });
+
+    describe('mathesSubChunks', function () {
+        it('should match if the first n chunks match', function () {
+            var first = ['a', 'b', 'c', 'd'];
+            var second = ['a', 'b'];
+            expect(urlutils.matchesSubChunks(first, second, 2)).to.be.true;
+        });
+
+        it('should not match if the first elements are different', function () {
+            expect(urlutils.matchesSubChunks(['a'], ['b'], 1)).to.be.false;
+        });
+
+        it('should not match if the first n-1 match but the nth does not', function () {
+            var first = ['a', 'b', 'c', 'd'];
+            var second = ['a', 'b', 'c', 'XYZ'];
+            expect(urlutils.matchesSubChunks(first, second, 4)).to.be.false;
+        });
+
+        it('should not match if numChunks is shorter than the length of subChunks', function () {
+            var first = ['a', 'b', 'c', 'd'];
+            var second = ['a', 'b', 'c', 'd'];
+            expect(urlutils.matchesSubChunks(first, second, second.length - 1)).to.be.false;
+        });
+    });
+    
+});

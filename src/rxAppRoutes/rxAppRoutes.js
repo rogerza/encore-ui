@@ -5,7 +5,7 @@ angular.module('encore.ui.rxAppRoutes', ['encore.ui.rxEnvironment'])
 * @description
 * Set of utility functions used by rxAppRoutes to break apart/compare URLs
 */
-.service('urlUtils', function ($location, rxEnvironmentUrlFilter, $interpolate, $route) {
+.service('urlUtils', function ($location, rxEnvironmentUrlFilter, $interpolate, $route, $document) {
     // remove any preceding # and / from the URL for cleaner comparison
     this.stripLeadingChars = function (url) {
         // http://regexr.com/39coc
@@ -27,20 +27,13 @@ angular.module('encore.ui.rxAppRoutes', ['encore.ui.rxEnvironment'])
         if (!_.isString(url)) {
             return [''];
         }
-        return _.filter(url.split('/'), function (chunk) {
-            return chunk !== '';
-        });
+
+        return _.compact(url.split('/'));
     };
 
-    // get the current path, adding the <base> path if neeeded
-    //
-    // @example
-    // if the current page url is 'http://localhost:9000/encore-ui/#/overviewPage#bookmark?book=harry%20potter'
-    // and the page contains a <base href="encore-ui"> tag
-    // getCurrentPath() would return '/encore-ui/overviewPage'
-    this.getCurrentPathChunks = function () {
-        var fullPath;
-        var base = document.getElementsByTagName('base');
+    // Get the current path. Knows how to work with the `base` tag
+    this.getFullPath = function () {
+        var base = $document.find('base');
         var basePath = '';
 
         if (base.length > 0) {
@@ -50,8 +43,17 @@ angular.module('encore.ui.rxAppRoutes', ['encore.ui.rxEnvironment'])
             basePath = this.stripTrailingSlash(basePath);
         }
 
-        fullPath = basePath + $location.path();
-        fullPath = this.stripLeadingChars(fullPath);
+        return basePath + $location.path();
+    };
+
+    // get the current path, adding the <base> path if neeeded
+    //
+    // @example
+    // if the current page url is 'http://localhost:9000/encore-ui/#/overviewPage#bookmark?book=harry%20potter'
+    // and the page contains a <base href="encore-ui"> tag
+    // getCurrentPath() would return '/encore-ui/overviewPage'
+    this.getCurrentPathChunks = function () {
+        var fullPath = this.stripLeadingChars(this.getFullPath());
 
         return this.getChunks(fullPath);
     };
@@ -110,7 +112,7 @@ angular.module('encore.ui.rxAppRoutes', ['encore.ui.rxEnvironment'])
     };
 
     // Given two sets of chunks, check if the first `numChunks` of `firstChunks`
-    // matches `subChunks`
+    // matches all of `subChunks`
     this.matchesSubChunks = function (firstChunks, subChunks, numChunks) {
         return _.isEqual(firstChunks.slice(0, numChunks), subChunks);
     };

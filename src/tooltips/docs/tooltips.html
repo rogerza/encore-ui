@@ -1,0 +1,9 @@
+<div ng-controller="tooltipsCtrl">
+    <ul>
+        <li><span tooltip="Right tooltip" tooltip-placement="right">Hover over me for a right-side tooltip</span></li>
+        <li><span tooltip="A top tooltip" tooltip-placement="top"><rx-button default-msg="Top tooltip"></rx-button></span></li>
+        <li><span tooltip="A bottom tooltip" tooltip-placement="bottom"><rx-button default-msg="Bottom tooltip"></rx-button></span></li>
+        <li><span tooltip="{{dynamicTooltip}}"><rx-button default-msg="Hover to see text coming from the controller"></rx-button></span></li>
+        <li><span tooltip-html-unsafe="<span class='tooltip-header'>A Tooltip Title</span><p>You can use HTML</p>"><span>Hover over this text to see HTML in a tooltip</span></li>
+    </ul>
+</div>

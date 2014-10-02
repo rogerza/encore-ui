@@ -54,6 +54,7 @@ paths:
   rxTokenInterceptor: "/#/component/rxTokenInterceptor"
   rxUnauthorizedInterceptor: "/#/component/rxUnauthorizedInterceptor"
   tabs: "/#/component/tabs"
+  tooltips: "/#/component/tooltips"
   typeahead: "/#/component/typeahead"
 # END DO NOT EDIT #
 

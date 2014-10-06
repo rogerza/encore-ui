@@ -77,6 +77,19 @@ A `page-actions` class is provided by rx-app to easily add custom page actions t
         <img src="http://cdn.memegenerator.net/instances/500x/48669250.jpg" alt="Look at all these servers there are so many"
     </rx-page>
 
+### .account-info
+
+An `account-info` class is provided by rx-app to easily add the Account Info box below the page title. For example:
+
+    <rx-page title="'Servers Overview'">
+        <div class="account-info">
+            <div class="account-info-title">Account Info</div>
+            Account Info and badges here
+        </div>
+    </rx-page>
+
+Note that when the `page-actions` class is present, `account-info` should go after it.
+
 ## rx-app-nav and rx-app-nav-item
 
 These two directives are responsible for creating the menu in the left sidebar. They're not intended for use outside of the rx-app template code.

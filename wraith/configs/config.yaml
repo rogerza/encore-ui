@@ -38,6 +38,7 @@ paths:
   rxFeedback: "/#/component/rxFeedback"
   rxForm: "/#/component/rxForm"
   rxIdentity: "/#/component/rxIdentity"
+  rxInfoPanel: "/#/component/rxInfoPanel"
   rxLocalStorage: "/#/component/rxLocalStorage"
   rxLogout: "/#/component/rxLogout"
   rxModalAction: "/#/component/rxModalAction"

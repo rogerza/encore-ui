@@ -6,10 +6,14 @@ describe('rxInfoPanel', function () {
 
     before(function () {
         demoPage.go('#/component/rxInfoPanel');
-        rxInfoPanel = rxInfoPanelPage.initialize($('#rxInfoPanel'));
+        rxInfoPanel = rxInfoPanelPage.initialize($('.info-panel'));
     });
 
     it('should show element', function () {
         expect(rxInfoPanel.isDisplayed()).to.eventually.be.true;
+    });
+
+    it('should populate the title', function () {
+        expect(rxInfoPanel.title).to.eventually.equal('A Custom Title');
     });
 });

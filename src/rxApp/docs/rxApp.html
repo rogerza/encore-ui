@@ -2,10 +2,6 @@
     <h1 class="title">Standard rxApp</h1>
     <rx-app id="standard-rxApp">
         <rx-page title="'Standard Page Title'">
-            <div class="account-info">
-                <div class="account-info-title">Account Info</div>
-                Account Info goes here.
-            </div>
             <p class="clear">This is my page content</p>
             <button ng-click="changeRoutes()" class="button">Change Routes</button>
         </rx-page>
@@ -14,10 +10,6 @@
     <h1 class="title">Customized rxApp (collapsible)</h1>
     <rx-app collapsible-nav="true" site-title="My App" id="custom-rxApp" menu="customMenu" new-instance="true" hide-feedback="true">
         <rx-page title="'Customized Page Title'" subtitle="subtitle">
-            <div class="account-info">
-                <div class="account-info-title">Account Info</div>
-                Account Info goes here.
-            </div>
             <p class="clear">Click a link in the menu to see the active state change</p>
             <p>Click the toggle to hide the menu</p>
             <button ng-click="changeSubtitle()" class="changeSubtitle button">Change Subtitle</button>

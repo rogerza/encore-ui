@@ -7,8 +7,26 @@ var rxInfoPanel = {
         value: function () {
             return this.rootElement.isDisplayed();
         }
-    }
+    },
 
+    lblTitle: {
+        get: function () { return this.rootElement.$('.info-title'); }
+    },
+
+    title: {
+        get: function () {
+            var page = this;
+            return this.lblTitle.isPresent().then(function (present) {
+                if (present) {
+                    return page.lblTitle.getText();
+                } else {
+                    var deferred = protractor.promise.defer();
+                    deferred.fulfill('');
+                    return deferred.promise;
+                }
+            });
+        }
+    },
 };
 
 exports.rxInfoPanel = {

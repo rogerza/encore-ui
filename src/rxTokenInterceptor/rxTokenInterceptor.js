@@ -17,11 +17,25 @@ angular.module('encore.ui.rxTokenInterceptor', ['encore.ui.rxSession'])
     *     });
     * </pre>
     */
-    .factory('TokenInterceptor', function (Session) {
-        return {
-            request: function (config) {
-                config.headers['X-Auth-Token'] = Session.getTokenId();
-                return config;
-            }
+    .provider('TokenInterceptor', function () {
+        var exclusionList = this.exclusionList = [ 'rackcdn.com' ];
+
+        this.$get = function (Session) {
+            return {
+                request: function (config) {
+                    // Don't add the X-Auth-Token if the request URL matches
+                    // something in exclusionList
+                    var exclude = _.some(exclusionList, function (item) {
+                        if (_.contains(config.url, item)) {
+                            return true;
+                        }
+                    });
+
+                    if (!exclude) {
+                        config.headers['X-Auth-Token'] = Session.getTokenId();
+                    }
+                    return config;
+                }
+            };
         };
     });

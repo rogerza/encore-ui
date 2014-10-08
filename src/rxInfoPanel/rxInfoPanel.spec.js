@@ -2,7 +2,9 @@
 
 describe('rxInfoPanel', function () {
     var scope, compile, rootScope, el;
-    var validTemplate = '<rx-info-panel></rx-info-panel>';
+    var infoPanelTemplate = '<rx-info-panel title="My Title">' +
+                            'Some stuff inside the directive' +
+                            '</rx-info-panel>';
 
     beforeEach(function () {
         // load module
@@ -18,11 +20,7 @@ describe('rxInfoPanel', function () {
             compile = $compile;
         });
 
-        el = helpers.createDirective(validTemplate, compile, scope);
+        el = helpers.createDirective(infoPanelTemplate, compile, scope);
     });
 
-    it('shall not pass', function () {
-        // Fail initial test to keep people honest
-        expect(true).to.be.false;
-    });
 });

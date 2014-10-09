@@ -5,7 +5,7 @@
                 Account Name
             </div>
             <div class="account-info-data">
-                Mosso
+                {{ accountName }}
             </div>
         </div>
         <div class="account-info-wrapper">
@@ -13,15 +13,15 @@
                 Account #
             </div>
             <div class="account-info-data">
-                323676
+                {{ accountNumber }}
             </div>
         </div>
         <div class="account-info-wrapper">
             <div class="account-info-label">
-                Badges (23 of 30) <a href="#">View all</a>
+                Badges
             </div>
             <div class="account-info-data">
-                <img src="http://www.collectiblebadges.com/media/large_elvis_presley_chief_deputy_badge_gold.jpg">
+                <img ng-repeat="badge in badges" ng-src="{{badge.url}}" tooltip="{{badge.name}}">
             </div>
         </div>
     </rx-info-panel>

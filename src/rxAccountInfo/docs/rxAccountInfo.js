@@ -13,10 +13,19 @@ angular.module('encore.ui.rxAccountInfo')
             var result = null;
 
             deferred.resolve([
-                { url: 'http://mirrors.creativecommons.org/presskit/icons/cc.large.png' },
-                { url: 'http://mirrors.creativecommons.org/presskit/icons/by.large.png' },
-                { url: 'http://mirrors.creativecommons.org/presskit/icons/nc.large.png' },
-                { url: 'http://mirrors.creativecommons.org/presskit/icons/zero.large.png' },
+                {
+                    url: 'http://mirrors.creativecommons.org/presskit/icons/cc.large.png',
+                    name: 'CC'
+                }, {
+                    url: 'http://mirrors.creativecommons.org/presskit/icons/by.large.png',
+                    name: 'BY'
+                }, {
+                    url: 'http://mirrors.creativecommons.org/presskit/icons/nc.large.png',
+                    name: 'NC',
+                }, {
+                    url: 'http://mirrors.creativecommons.org/presskit/icons/zero.large.png',
+                    name: 'ZERO',
+                },
             ]);
 
             deferred.promise.then(success, failure);

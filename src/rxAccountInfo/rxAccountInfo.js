@@ -7,15 +7,13 @@ angular.module('encore.ui.rxAccountInfo', [])
             accountNumber: '@'
         },
         link: function (scope) {
-            var badgeSuccess = function (badges) {
+            SupportAccount.getBadges({ accountNumber: scope.accountNumber }, function (badges) {
                 scope.badges = badges;
-            };
-            SupportAccount.getBadges({ accountNumber: scope.accountNumber }, badgeSuccess);
+            });
 
-            var accountSuccess = function (account) {
+            Encore.getAccount({ id: scope.accountNumber }, function (account) {
                 scope.accountName = account.name;
-            };
-            Encore.getAccount({ id: scope.accountNumber }, accountSuccess);
+            });
             
         }
     };

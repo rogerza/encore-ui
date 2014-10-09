@@ -15,16 +15,16 @@ angular.module('encore.ui.rxAccountInfo')
             deferred.resolve([
                 {
                     url: 'http://mirrors.creativecommons.org/presskit/icons/cc.large.png',
-                    name: 'CC'
+                    description: 'CC'
                 }, {
                     url: 'http://mirrors.creativecommons.org/presskit/icons/by.large.png',
-                    name: 'BY'
+                    description: 'BY'
                 }, {
                     url: 'http://mirrors.creativecommons.org/presskit/icons/nc.large.png',
-                    name: 'NC',
+                    description: 'NC',
                 }, {
                     url: 'http://mirrors.creativecommons.org/presskit/icons/zero.large.png',
-                    name: 'ZERO',
+                    description: 'ZERO',
                 },
             ]);
 

@@ -22,6 +22,7 @@ screen_widths:
 paths:
   configs: "/#/component/configs"
   hotkeys: "/#/component/hotkeys"
+  rxAccountInfo: "/#/component/rxAccountInfo"
   rxActionMenu: "/#/component/rxActionMenu"
   rxActiveUrl: "/#/component/rxActiveUrl"
   rxAge: "/#/component/rxAge"

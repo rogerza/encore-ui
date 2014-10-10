@@ -35,7 +35,7 @@ Provides styling for the Angular-UI tab HTML
 */
 .nav-tabs {
     display: flex;
-    border-bottom: 9px solid #4480c1;
+    border-bottom: 9px solid @tabBorder;
 
     li {
         flex: 0 0 auto;
@@ -65,7 +65,7 @@ Provides styling for the Angular-UI tab HTML
     }
 
     .active a {
-        background: #4480c1;
+        background: @tabBorder;
         color: @white;
 
         .subdued {

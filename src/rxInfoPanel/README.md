@@ -2,6 +2,6 @@
 
 A generic info panel intended for use at the top of pages. For example:
 
-    <rx-info-panel title="My title!">
+    <rx-info-panel panel-title="My title!">
         You can put whatever you like in here.
     </rx-info-panel>

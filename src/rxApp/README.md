@@ -89,7 +89,7 @@ As mentioned, several classes are included for utility use in common.less. The [
 
 ## Fonts
 
-The Encore-UI default font is Roboto. This is used for all text on the page and is loaded via Google Fonts. Be sure you app includes the following line:
+The Encore-UI default font is Roboto. This is used for all text on the page and is loaded via Google Fonts. Be sure your app includes the following line:
 
 ```
 <link href="https://fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,700,700italic" rel="stylesheet" type="text/css" />

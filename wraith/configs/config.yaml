@@ -21,6 +21,7 @@ screen_widths:
 # These paths are automatically generated during the build process
 paths:
   configs: "/#/component/configs"
+  grid: "/#/component/grid"
   hotkeys: "/#/component/hotkeys"
   rxActionMenu: "/#/component/rxActionMenu"
   rxActiveUrl: "/#/component/rxActiveUrl"
